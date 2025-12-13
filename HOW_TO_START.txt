@@ -1,0 +1,95 @@
+================================================================================
+  OIL PRODUCTION PREDICTION APP - QUICK START GUIDE
+================================================================================
+
+FOR WINDOWS USERS:
+------------------
+
+STEP 1: Double-click "START.bat"
+        That's it! The script does everything automatically.
+
+STEP 2: Wait for the application to start (first time takes 5-15 minutes)
+
+STEP 3: The app will open in your browser automatically!
+
+
+FIRST TIME SETUP:
+-----------------
+
+If you see errors about Python or Node.js not found:
+
+1. Install Python:
+   - Go to: https://www.python.org/downloads/
+   - Download Python 3.11 or newer
+   - IMPORTANT: Check "Add Python to PATH" during installation
+   - Restart your computer
+
+2. Install Node.js:
+   - Go to: https://nodejs.org/
+   - Download the LTS version
+   - Just click "Install" (it adds itself to PATH automatically)
+   - Restart your computer
+
+3. Double-click START.bat again
+
+
+WHAT HAPPENS WHEN YOU RUN START.bat:
+-------------------------------------
+
+✓ Checks if Python is installed
+✓ Checks if Node.js is installed
+✓ Creates Python virtual environment (first time only)
+✓ Installs all Python packages (first time only, takes 5-10 minutes)
+✓ Installs all Node.js packages (first time only, takes 2-5 minutes)
+✓ Starts backend server (port 8000)
+✓ Starts frontend server (port 3000)
+✓ Opens browser automatically
+
+
+TO STOP THE APPLICATION:
+-------------------------
+
+Close the two windows that opened:
+  - "Oil Production - Backend Server"
+  - "Oil Production - Frontend Server"
+
+Or press Ctrl+C in each window
+
+
+ACCESS POINTS:
+--------------
+
+Main App:     http://localhost:3000
+Backend API:  http://localhost:8000
+API Docs:     http://localhost:8000/docs
+
+
+TROUBLESHOOTING:
+----------------
+
+Problem: "Python is not installed"
+Solution: Install Python from python.org (check "Add Python to PATH")
+
+Problem: "Node.js is not installed"
+Solution: Install Node.js from nodejs.org
+
+Problem: "Port already in use"
+Solution: Close other applications using ports 3000 or 8000
+
+Problem: Application doesn't open
+Solution: Manually open http://localhost:3000 in your browser
+
+Problem: Slow first startup
+Solution: This is normal! First time installation takes 5-15 minutes
+
+
+NEED MORE HELP?
+---------------
+
+See README_WINDOWS.md for detailed instructions and troubleshooting.
+
+
+================================================================================
+  That's it! Just double-click START.bat and you're ready to go!
+================================================================================
+
