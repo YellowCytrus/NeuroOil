@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Use environment variable for API URL, fallback to relative path or localhost
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? '/api' : 'https://your-backend-url.herokuapp.com/api');
+// Use environment variable for API URL, fallback to same-origin /api
+// В production без VITE_API_URL все запросы идут на /api (через nginx reverse proxy)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export interface PredictionRequest {
   P_downhole: number;
