@@ -149,7 +149,12 @@ export default function NeuralNetworkViz({ progress }: NeuralNetworkVizProps) {
                   className="text-xs fill-gray-600"
                   fontSize="10"
                 >
-                  {['P', 'Q', 'H', 'W', 'G', 'O', 'C'][node.id.split('_')[1]?.replace('node', '') || 0]}
+                  {(() => {
+                    const labels = ['P', 'Q', 'H', 'W', 'G', 'O', 'C'] as const;
+                    const rawIndex = node.id.split('_')[1]?.replace('node', '');
+                    const index = Number(rawIndex);
+                    return labels[Number.isFinite(index) ? index : 0] ?? '';
+                  })()}
                 </text>
               )}
             </g>

@@ -55,8 +55,6 @@ export default function TrainingPage() {
     }
   };
 
-  const currentProgress = progressHistory[progressHistory.length - 1];
-
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">

@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api';
+// Use environment variable for API URL, fallback to relative path or localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? '/api' : 'https://your-backend-url.herokuapp.com/api');
 
 export interface PredictionRequest {
   P_downhole: number;
@@ -101,7 +103,7 @@ export const subscribeToTrainingProgress = (
   // Use full URL for SSE (EventSource doesn't work with Vite proxy)
   const baseURL = import.meta.env.DEV 
     ? 'http://localhost:8000/api' 
-    : API_BASE_URL;
+    : (import.meta.env.VITE_API_URL || API_BASE_URL);
   const eventSource = new EventSource(`${baseURL}/training/progress?task_id=${taskId}`);
   
   eventSource.addEventListener('progress', (event: MessageEvent) => {

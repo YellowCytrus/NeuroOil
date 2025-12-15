@@ -1,179 +1,176 @@
-#!/bin/bash
-# Скрипт для быстрого запуска проекта
-# Запускает backend и frontend одновременно
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Цвета для вывода
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+### ==== НАСТРОЙКИ ==== ###
+# Пользователь, от имени которого будет работать приложение (обычно твой ssh-пользователь)
+APP_USER="${APP_USER:-$USER}"
 
-# Получаем директорию проекта
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$PROJECT_DIR"
+# Домашняя директория пользователя
+APP_HOME="${APP_HOME:-/home/$APP_USER}"
 
-# Определяем пути к директориям
-BACKEND_DIR="$PROJECT_DIR/backend"
-FRONTEND_DIR="$PROJECT_DIR/frontend"
+# Директория, куда клонируем репозиторий
+APP_DIR="${APP_DIR:-$APP_HOME/NeuroOil}"
 
-# Функция для вывода сообщений
-info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
+# URL репозитория
+REPO_URL="${REPO_URL:-https://github.com/YellowCytrus/NeuroOil.git}"
 
-success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
+# Домен или IP сервера (используется в nginx-конфиге)
+DOMAIN_OR_IP="${DOMAIN_OR_IP:-your-domain-or-ip}"
 
-warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
+# Порт, на котором будет слушать FastAPI
+BACKEND_PORT="${BACKEND_PORT:-8000}"
 
-error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
+### ===================== ###
 
-# Функция очистки при выходе
-cleanup() {
-    info "Остановка серверов..."
-    
-    # Убиваем все дочерние процессы
-    if [ ! -z "$BACKEND_PID" ]; then
-        kill $BACKEND_PID 2>/dev/null || true
-    fi
-    if [ ! -z "$FRONTEND_PID" ]; then
-        kill $FRONTEND_PID 2>/dev/null || true
-    fi
-    
-    # Убиваем все процессы uvicorn и vite
-    pkill -f "uvicorn app.main:app" 2>/dev/null || true
-    pkill -f "vite" 2>/dev/null || true
-    
-    success "Серверы остановлены"
-    exit 0
-}
+echo "==> Обновление индекса пакетов"
+sudo apt update
 
-# Устанавливаем обработчик выхода
-trap cleanup EXIT INT TERM
+echo "==> Установка базовых пакетов (git, python, nginx)"
+sudo DEBIAN_FRONTEND=noninteractive apt install -y \
+  git python3 python3-venv python3-pip \
+  nginx
 
-# Проверка зависимостей backend
-info "Проверка зависимостей backend..."
-
-if [ ! -d "$BACKEND_DIR" ]; then
-    error "Директория backend не найдена!"
-    exit 1
-fi
-
-# Функция запуска backend
-start_backend() {
-    cd "$BACKEND_DIR"
-    if command -v uv &> /dev/null; then
-        uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-    elif [ -f "$PROJECT_DIR/.venv/bin/python" ]; then
-        source "$PROJECT_DIR/.venv/bin/activate"
-        python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-    elif [ -f "$BACKEND_DIR/.venv/bin/python" ]; then
-        source .venv/bin/activate
-        python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-    else
-        python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-    fi
-}
-
-# Функция запуска frontend
-start_frontend() {
-    cd "$FRONTEND_DIR"
-    npm run dev
-}
-
-# Определяем способ запуска backend
-if command -v uv &> /dev/null; then
-    info "Найден uv, будет использован для запуска backend"
-elif [ -f "$PROJECT_DIR/.venv/bin/python" ]; then
-    info "Найдено виртуальное окружение .venv"
-elif [ -f "$BACKEND_DIR/.venv/bin/python" ]; then
-    info "Найдено локальное виртуальное окружение backend/.venv"
+# Node.js и npm ставим только если их нет,
+# чтобы не ломать уже существующую установку/версию
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+  echo "==> Node.js / npm не найдены, устанавливаю из репозитория Ubuntu"
+  sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs npm
 else
-    warning "Не найдено ни uv, ни виртуальное окружение"
-    warning "Попытка запуска с системным Python..."
+  echo "==> Node.js и npm уже установлены, пропускаю их установку"
+  node -v || true
+  npm -v || true
 fi
 
-# Проверка зависимостей frontend
-info "Проверка зависимостей frontend..."
-
-if [ ! -d "$FRONTEND_DIR" ]; then
-    error "Директория frontend не найдена!"
-    exit 1
+echo "==> Создание пользователя и директорий (если нужно)"
+if ! id "$APP_USER" >/dev/null 2>&1; then
+  echo "Пользователь $APP_USER не найден, создаю..."
+  sudo adduser --disabled-password --gecos "" "$APP_USER"
 fi
 
-# Проверяем наличие node_modules
-if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
-    warning "node_modules не найдены. Запускаю npm install..."
-    cd "$FRONTEND_DIR"
-    npm install
-    cd "$PROJECT_DIR"
+sudo mkdir -p "$APP_HOME"
+sudo chown -R "$APP_USER:$APP_USER" "$APP_HOME"
+
+echo "==> Клонирование репозитория в $APP_DIR"
+if [ ! -d "$APP_DIR/.git" ]; then
+  sudo -u "$APP_USER" git clone "$REPO_URL" "$APP_DIR"
+else
+  echo "Репозиторий уже существует, обновляю..."
+  sudo -u "$APP_USER" git -C "$APP_DIR" pull --ff-only
 fi
 
-# Запуск backend
-info "Запуск backend сервера (порт 8000)..."
-start_backend > /tmp/neuro_oil_backend.log 2>&1 &
-BACKEND_PID=$!
+### БЭКЕНД (FastAPI) ###
 
-# Ждем немного и проверяем, что backend запустился
-sleep 3
-if ! kill -0 $BACKEND_PID 2>/dev/null; then
-    error "Backend не запустился! Проверьте логи:"
-    cat /tmp/neuro_oil_backend.log
-    exit 1
+echo "==> Настройка backend (FastAPI)"
+BACKEND_DIR="$APP_DIR/backend"
+
+# venv
+if [ ! -d "$BACKEND_DIR/.venv" ]; then
+  echo "Создаю виртуальное окружение..."
+  sudo -u "$APP_USER" python3 -m venv "$BACKEND_DIR/.venv"
 fi
 
-success "Backend запущен (PID: $BACKEND_PID)"
+echo "==> Установка python-зависимостей"
+sudo -u "$APP_USER" bash -lc "source '$BACKEND_DIR/.venv/bin/activate' && pip install --upgrade pip && pip install -r '$BACKEND_DIR/requirements.txt'"
 
-# Запуск frontend
-info "Запуск frontend сервера (порт 3000)..."
-start_frontend > /tmp/neuro_oil_frontend.log 2>&1 &
-FRONTEND_PID=$!
+### ФРОНТЕНД (Vite/React) ###
 
-# Ждем немного и проверяем, что frontend запустился
-sleep 3
-if ! kill -0 $FRONTEND_PID 2>/dev/null; then
-    error "Frontend не запустился! Проверьте логи:"
-    cat /tmp/neuro_oil_frontend.log
-    kill $BACKEND_PID 2>/dev/null || true
-    exit 1
+echo "==> Сборка frontend"
+FRONTEND_DIR="$APP_DIR/frontend"
+sudo -u "$APP_USER" bash -lc "
+  cd '$FRONTEND_DIR' && \
+  npm install && \
+  npm run build
+"
+
+# Папка со статикой
+FRONTEND_DIST="$FRONTEND_DIR/dist"
+
+### SYSTEMD-СЕРВИС ДЛЯ BACKEND ###
+
+echo "==> Создание systemd-сервиса neurooil-backend.service"
+
+SERVICE_FILE="/etc/systemd/system/neurooil-backend.service"
+
+sudo bash -c "cat > '$SERVICE_FILE' <<EOF
+[Unit]
+Description=NeuroOil FastAPI backend
+After=network.target
+
+[Service]
+User=$APP_USER
+WorkingDirectory=$BACKEND_DIR
+Environment=\"PATH=$BACKEND_DIR/.venv/bin\"
+ExecStart=$BACKEND_DIR/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_PORT
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+"
+
+echo "==> Перезапуск systemd и запуск сервиса"
+sudo systemctl daemon-reload
+sudo systemctl enable --now neurooil-backend.service
+
+echo "==> Проверка статуса backend-сервиса:"
+sudo systemctl status neurooil-backend.service --no-pager || true
+
+### NGINX КОНФИГ ###
+
+NGINX_SITE="/etc/nginx/sites-available/neurooil"
+
+echo "==> Создание nginx-конфига $NGINX_SITE"
+
+sudo bash -c "cat > '$NGINX_SITE' <<EOF
+server {
+    listen 80;
+    server_name $DOMAIN_OR_IP;
+
+    root $FRONTEND_DIST;
+    index index.html;
+
+    # SPA-роутинг
+    location / {
+        try_files \$uri /index.html;
+    }
+
+    # Проксирование API на FastAPI
+    location /api/ {
+        proxy_pass http://127.0.0.1:$BACKEND_PORT/api/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+"
+
+echo "==> Активация сайта в nginx"
+sudo ln -sf "$NGINX_SITE" /etc/nginx/sites-enabled/neurooil
+
+# Стандартный default-сайт можно отключить при желании
+if [ -f /etc/nginx/sites-enabled/default ]; then
+  sudo rm /etc/nginx/sites-enabled/default
 fi
 
-success "Frontend запущен (PID: $FRONTEND_PID)"
+echo "==> Проверка конфига nginx"
+sudo nginx -t
 
-# Выводим информацию
-echo ""
+echo "==> Перезапуск nginx"
+sudo systemctl restart nginx
+
+### UFW (если используется) ###
+
+if command -v ufw >/dev/null 2>&1; then
+  echo "==> Настройка UFW (файрволл) — открываю HTTP(80)"
+  sudo ufw allow 'Nginx Full' || true
+fi
+
 echo "=========================================="
-success "Проект успешно запущен!"
+echo "Готово!"
+echo "Backend слушает на 127.0.0.1:$BACKEND_PORT (через systemd-сервис neurooil-backend)"
+echo "Фронтенд отдаётся nginx из $FRONTEND_DIST"
+echo "Открой в браузере: http://$DOMAIN_OR_IP/"
+echo "Если домен ещё не привязан — используй IP сервера."
 echo "=========================================="
-echo ""
-info "Backend API:  http://localhost:8000"
-info "Frontend UI:  http://localhost:3000"
-info "API Docs:     http://localhost:8000/docs"
-echo ""
-info "Backend PID:  $BACKEND_PID"
-info "Frontend PID: $FRONTEND_PID"
-echo ""
-info "Логи backend:  /tmp/neuro_oil_backend.log"
-info "Логи frontend: /tmp/neuro_oil_frontend.log"
-echo ""
-warning "Для остановки нажмите Ctrl+C"
-echo "=========================================="
-echo ""
-
-# Показываем последние строки логов
-info "Последние строки логов backend:"
-tail -n 5 /tmp/neuro_oil_backend.log || true
-echo ""
-info "Последние строки логов frontend:"
-tail -n 5 /tmp/neuro_oil_frontend.log || true
-echo ""
-
-# Ожидание
-wait
-
