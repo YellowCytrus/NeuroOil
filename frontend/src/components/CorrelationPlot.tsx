@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart } from 'recharts';
+import { Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart } from 'recharts';
 import { CorrelationData } from '../utils/api';
 import { formatNumber } from '../utils/formatNumber';
 
@@ -38,7 +38,7 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
   const isLegacyFormat = correlationData && 'points' in correlationData && 'correlation_coefficient' in correlationData;
   
   const correlations: Record<string, CorrelationData> = isLegacyFormat
-    ? { 'Q_liquid': correlationData as CorrelationData }
+    ? { 'Q_liquid': correlationData as unknown as CorrelationData }
     : (correlationData || {});
 
   const featureNames = Object.keys(correlations);

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrainingProgress } from '../utils/api';
+import { TrainingProgress, CorrelationData } from '../utils/api';
 import FeatureImportanceChart from './FeatureImportanceChart';
 import CorrelationPlot from './CorrelationPlot';
 import { formatNumber } from '../utils/formatNumber';
@@ -182,7 +182,11 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
 
       {/* Correlation Plot - Show as soon as data is available */}
       {currentProgress?.correlation_data && (
-        <CorrelationPlot correlationData={currentProgress.correlation_data} />
+        <CorrelationPlot correlationData={
+          'points' in currentProgress.correlation_data && 'correlation_coefficient' in currentProgress.correlation_data
+            ? { 'Q_liquid': currentProgress.correlation_data }
+            : currentProgress.correlation_data as Record<string, CorrelationData>
+        } />
       )}
     </div>
   );

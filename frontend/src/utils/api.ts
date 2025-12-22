@@ -74,7 +74,7 @@ export interface TrainingProgress {
     rmse: number;
   };
   feature_importance?: Record<string, FeatureImportance>;
-  correlation_data?: CorrelationData;
+  correlation_data?: CorrelationData | Record<string, CorrelationData>;
   error?: string;
 }
 

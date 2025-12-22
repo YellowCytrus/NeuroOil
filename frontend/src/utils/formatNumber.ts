@@ -7,7 +7,6 @@
  */
 export function formatNumber(value: number, unit?: string): string {
   const absValue = Math.abs(value);
-  const sign = value < 0 ? '-' : '';
   
   // Обработка нуля
   if (value === 0) {

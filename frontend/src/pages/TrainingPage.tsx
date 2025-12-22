@@ -3,7 +3,7 @@ import FileUpload from '../components/FileUpload';
 import TrainingDashboard from '../components/TrainingDashboard';
 import { useTrainingProgress } from '../hooks/useTrainingProgress';
 import { startTraining, TrainingProgress } from '../utils/api';
-import { loadTrainingData, clearTrainingData } from '../utils/localStorage';
+import { loadTrainingData } from '../utils/localStorage';
 
 export default function TrainingPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -26,7 +26,7 @@ export default function TrainingPage() {
             return {
               ...p,
               feature_importance: savedData.featureImportance || p.feature_importance,
-              correlation_data: savedData.correlationData || p.correlation_data,
+              correlation_data: (savedData.correlationData || p.correlation_data) as TrainingProgress['correlation_data'],
               metrics: savedData.finalMetrics || p.metrics
             };
           }
@@ -34,7 +34,7 @@ export default function TrainingPage() {
           if (p.epoch === 0 && savedData.correlationData) {
             return {
               ...p,
-              correlation_data: savedData.correlationData
+              correlation_data: savedData.correlationData as TrainingProgress['correlation_data']
             };
           }
           return p;

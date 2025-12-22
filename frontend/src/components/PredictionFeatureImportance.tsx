@@ -85,7 +85,7 @@ export default function PredictionFeatureImportance({ featureImportance }: Predi
             fill="#3b82f6"
             name="Важность признака"
           >
-            {data.map((entry, index) => (
+            {data.map((_entry, index) => (
               <ErrorBar
                 key={index}
                 dataKey="std"
