@@ -184,7 +184,7 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
       {currentProgress?.correlation_data && (
         <CorrelationPlot correlationData={
           'points' in currentProgress.correlation_data && 'correlation_coefficient' in currentProgress.correlation_data
-            ? { 'Q_liquid': currentProgress.correlation_data }
+            ? { 'Q_liquid': currentProgress.correlation_data as CorrelationData }
             : currentProgress.correlation_data as Record<string, CorrelationData>
         } />
       )}
