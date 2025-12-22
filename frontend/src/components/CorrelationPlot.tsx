@@ -8,12 +8,16 @@ interface CorrelationPlotProps {
 }
 
 const featureLabels: Record<string, string> = {
-  'P_downhole': 'P_downhole (bara)',
-  'Q_liquid': 'Q_liquid (м³/сут)',
-  'H_pump': 'H_pump (м)',
-  'WC_percent': 'WC_percent (%)',
-  'GFR': 'GFR (м³/м³)',
-  'choke_size': 'choke_size (%)'
+  'P_downhole': 'Давление на забое (bara)',
+  'Q_liquid': 'Дебит жидкости (м³/сут)',
+  'H_pump': 'Напор насоса (м)',
+  'WC_percent': 'Обводненность (%)',
+  'GFR': 'Газовый фактор (м³/м³)',
+  'T_downhole': 'Забойная температура (°C)',
+  'P_annulus': 'Давление в затрубном пространстве (бар)',
+  'P_wellhead': 'Устьевое давление (бар)',
+  'T_wellhead': 'Устьевая температура (°C)',
+  'dp_choke': 'Перепад давления на штуцере (бар)'
 };
 
 const featureUnits: Record<string, string> = {
@@ -22,7 +26,11 @@ const featureUnits: Record<string, string> = {
   'H_pump': 'м',
   'WC_percent': '%',
   'GFR': 'м³/м³',
-  'choke_size': '%'
+  'T_downhole': '°C',
+  'P_annulus': 'бар',
+  'P_wellhead': 'бар',
+  'T_wellhead': '°C',
+  'dp_choke': 'бар'
 };
 
 export default function CorrelationPlot({ correlationData }: CorrelationPlotProps) {

@@ -121,7 +121,9 @@ NGINX_SITE="/etc/nginx/sites-available/neurooil"
 
 echo "==> Создание nginx-конфига $NGINX_SITE"
 
-sudo bash -c "cat > '$NGINX_SITE' <<EOF
+# Создаем временный файл с правильным экранированием
+TMP_NGINX=$(mktemp)
+cat > "$TMP_NGINX" <<EOF
 server {
     listen 80;
     server_name $DOMAIN_OR_IP;
@@ -144,7 +146,9 @@ server {
     }
 }
 EOF
-"
+
+sudo mv "$TMP_NGINX" "$NGINX_SITE"
+sudo chmod 644 "$NGINX_SITE"
 
 echo "==> Активация сайта в nginx"
 sudo ln -sf "$NGINX_SITE" /etc/nginx/sites-enabled/neurooil

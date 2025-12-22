@@ -49,8 +49,11 @@ def predict(model, scaler, features):
         - H_pump (м)
         - WC_percent (%)
         - GFR (м³/м³)
-        - on_stream_hrs (часы/сутки)
-        - choke_size (%)
+        - T_downhole (°C)
+        - P_annulus (бар)
+        - P_wellhead (бар)
+        - T_wellhead (°C)
+        - dp_choke (бар)
     
     Returns:
     --------
@@ -60,7 +63,8 @@ def predict(model, scaler, features):
     if isinstance(features, dict):
         feature_names = [
             'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-            'GFR', 'on_stream_hrs', 'choke_size'
+            'GFR', 'T_downhole', 'P_annulus',
+            'P_wellhead', 'T_wellhead', 'dp_choke'
         ]
         features_array = np.array([[features.get(name, 0) for name in feature_names]])
     else:
@@ -84,7 +88,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python predict.py 250.0 2000.0 1500.0 50.0 200.0 24.0 45.0
+  python predict.py 250.0 2000.0 1500.0 50.0 200.0 97.0 10.0 20.0 10.0 15.0
   
   python predict.py --interactive
   
@@ -94,8 +98,11 @@ Parameters (in order):
   3. H_pump          - напор насоса (м)
   4. WC_percent      - обводненность (%)
   5. GFR             - газовый фактор (м³/м³)
-  6. on_stream_hrs   - время работы (часы/сутки)
-  7. choke_size      - размер штуцера (%)
+  6. T_downhole      - забойная температура (°C)
+  7. P_annulus       - давление в затрубном пространстве (бар)
+  8. P_wellhead      - устьевое давление (бар)
+  9. T_wellhead      - устьевая температура (°C)
+  10. dp_choke       - перепад давления на штуцере (бар)
         """
     )
     
@@ -103,7 +110,7 @@ Parameters (in order):
         'values',
         nargs='*',
         type=float,
-        help='7 parameter values: P_downhole Q_liquid H_pump WC_percent GFR on_stream_hrs choke_size'
+        help='10 parameter values: P_downhole Q_liquid H_pump WC_percent GFR T_downhole P_annulus P_wellhead T_wellhead dp_choke'
     )
     
     parser.add_argument(
@@ -140,7 +147,8 @@ Parameters (in order):
     
     feature_names = [
         'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-        'GFR', 'on_stream_hrs', 'choke_size'
+        'GFR', 'T_downhole', 'P_annulus',
+        'P_wellhead', 'T_wellhead', 'dp_choke'
     ]
     
     feature_descriptions = [
@@ -149,8 +157,11 @@ Parameters (in order):
         'напор насоса (м)',
         'обводненность (%)',
         'газовый фактор (м³/м³)',
-        'время работы (часы/сутки)',
-        'размер штуцера (%)'
+        'забойная температура (°C)',
+        'давление в затрубном пространстве (бар)',
+        'устьевое давление (бар)',
+        'устьевая температура (°C)',
+        'перепад давления на штуцере (бар)'
     ]
     
     
@@ -168,16 +179,16 @@ Parameters (in order):
                     break
                 except ValueError:
                     print("  Please enter a valid number")
-    elif len(args.values) == 7:
+    elif len(args.values) == 10:
         
         values = args.values
     elif len(args.values) == 0:
         
-        print("Error: Please provide 7 parameter values or use --interactive mode\n")
+        print("Error: Please provide 10 parameter values or use --interactive mode\n")
         parser.print_help()
         sys.exit(1)
     else:
-        print(f"Error: Expected 7 parameters, got {len(args.values)}\n", file=sys.stderr)
+        print(f"Error: Expected 10 parameters, got {len(args.values)}\n", file=sys.stderr)
         parser.print_help()
         sys.exit(1)
     

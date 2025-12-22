@@ -64,7 +64,11 @@ def predict(model, scaler, features):
         - H_pump (м)
         - WC_percent (%)
         - GFR (м³/м³)
-        - choke_size (%)
+        - T_downhole (°C)
+        - P_annulus (бар)
+        - P_wellhead (бар)
+        - T_wellhead (°C)
+        - dp_choke (бар)
     
     Returns:
     --------
@@ -74,7 +78,8 @@ def predict(model, scaler, features):
     if isinstance(features, dict):
         feature_names = [
             'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-            'GFR', 'choke_size'
+            'GFR', 'T_downhole', 'P_annulus',
+            'P_wellhead', 'T_wellhead', 'dp_choke'
         ]
         features_array = np.array([[features.get(name, 0) for name in feature_names]])
     else:

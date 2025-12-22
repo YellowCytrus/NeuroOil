@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Neural network for oil production prediction.
-Predicts debit_oil_t_per_day from 7 input parameters.
+Predicts debit_oil_t_per_day from 10 input parameters.
 """
 
 import pandas as pd
@@ -44,13 +44,25 @@ def load_and_preprocess_data(csv_path):
     
     # Parse numeric columns that might have commas
     numeric_cols = [
-        'AVG_DOWNHOLE_PRESSURE', 'AVG_DP_TUBING', 'AVG_CHOKE_SIZE_P',
-        'ON_STREAM_HRS', 'BORE_OIL_VOL', 'BORE_GAS_VOL', 'BORE_WAT_VOL'
+        'AVG_DOWNHOLE_PRESSURE', 'AVG_DOWNHOLE_TEMPERATURE', 'AVG_DP_TUBING',
+        'AVG_ANNULUS_PRESS', 'AVG_WHP_P', 'AVG_WHT_P',
+        'DP_CHOKE_SIZE', 'ON_STREAM_HRS', 'BORE_OIL_VOL', 'BORE_GAS_VOL', 'BORE_WAT_VOL'
     ]
     
     for col in numeric_cols:
         if col in df.columns:
             df[col] = df[col].apply(parse_numeric)
+    
+    # Normalize volumes to 24 hours based on ON_STREAM_HRS
+    print("Normalizing volumes to 24 hours based on ON_STREAM_HRS...")
+    on_stream_factor = np.where(
+        (df['ON_STREAM_HRS'] > 0) & (df['ON_STREAM_HRS'] < 24),
+        24.0 / df['ON_STREAM_HRS'],
+        1.0
+    )
+    df['BORE_OIL_VOL'] = df['BORE_OIL_VOL'] * on_stream_factor
+    df['BORE_GAS_VOL'] = df['BORE_GAS_VOL'] * on_stream_factor
+    df['BORE_WAT_VOL'] = df['BORE_WAT_VOL'] * on_stream_factor
     
     # Compute features according to specifications
     print("Computing features...")
@@ -79,11 +91,20 @@ def load_and_preprocess_data(csv_path):
         np.nan
     )
     
-    # 6. on_stream_hrs = ON_STREAM_HRS
-    df['on_stream_hrs'] = df['ON_STREAM_HRS']
+    # 6. T_downhole = AVG_DOWNHOLE_TEMPERATURE (забойная температура)
+    df['T_downhole'] = df['AVG_DOWNHOLE_TEMPERATURE']
     
-    # 7. choke_size = AVG_CHOKE_SIZE_P
-    df['choke_size'] = df['AVG_CHOKE_SIZE_P']
+    # 7. P_annulus = AVG_ANNULUS_PRESS (давление в затрубном пространстве)
+    df['P_annulus'] = df['AVG_ANNULUS_PRESS']
+    
+    # 8. P_wellhead = AVG_WHP_P (устьевое давление)
+    df['P_wellhead'] = df['AVG_WHP_P']
+    
+    # 9. T_wellhead = AVG_WHT_P (устьевая температура)
+    df['T_wellhead'] = df['AVG_WHT_P']
+    
+    # 10. dp_choke = DP_CHOKE_SIZE (перепад давления на штуцере)
+    df['dp_choke'] = df['DP_CHOKE_SIZE']
     
     # Target: debit_oil_t_per_day = BORE_OIL_VOL × 0.842
     df['debit_oil_t_per_day'] = df['BORE_OIL_VOL'] * 0.842
@@ -91,7 +112,8 @@ def load_and_preprocess_data(csv_path):
     # Select only the features and target we need
     feature_cols = [
         'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-        'GFR', 'on_stream_hrs', 'choke_size'
+        'GFR', 'T_downhole', 'P_annulus',
+        'P_wellhead', 'T_wellhead', 'dp_choke'
     ]
     target_col = 'debit_oil_t_per_day'
     
@@ -247,7 +269,8 @@ def main():
     feature_info = {
         'feature_names': [
             'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-            'GFR', 'on_stream_hrs', 'choke_size'
+            'GFR', 'T_downhole', 'P_annulus',
+            'P_wellhead', 'T_wellhead', 'dp_choke'
         ],
         'target_name': 'debit_oil_t_per_day',
         'metrics': {

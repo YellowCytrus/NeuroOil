@@ -10,7 +10,11 @@ export interface PredictionRequest {
   H_pump: number;
   WC_percent: number;
   GFR: number;
-  choke_size: number;
+  T_downhole: number;
+  P_annulus: number;
+  P_wellhead: number;
+  T_wellhead: number;
+  dp_choke: number;
 }
 
 export interface PredictionResponse {

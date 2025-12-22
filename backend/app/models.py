@@ -11,7 +11,11 @@ class PredictionRequest(BaseModel):
     H_pump: float
     WC_percent: float
     GFR: float
-    choke_size: float
+    T_downhole: float
+    P_annulus: float
+    P_wellhead: float
+    T_wellhead: float
+    dp_choke: float
 
 
 class PredictionResponse(BaseModel):
