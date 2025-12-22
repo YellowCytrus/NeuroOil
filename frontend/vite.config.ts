@@ -13,10 +13,11 @@ export default defineConfig({
         : '/neuro-oil/')
     : '/',
   server: {
-    port: 3000,
+    port: parseInt(process.env.PORT || '3000'),
+    host: process.env.HOST || '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.BACKEND_URL || 'http://localhost:8000',
         changeOrigin: true,
       },
     },

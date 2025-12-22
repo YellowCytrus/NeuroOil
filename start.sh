@@ -131,7 +131,7 @@ server {
 
     # SPA-роутинг
     location / {
-        try_files \$uri /index.html;
+        try_files \$uri \$uri/ /index.html;
     }
 
     # Проксирование API на FastAPI

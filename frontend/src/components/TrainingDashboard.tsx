@@ -1,11 +1,44 @@
+import { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrainingProgress } from '../utils/api';
+import FeatureImportanceChart from './FeatureImportanceChart';
+import CorrelationPlot from './CorrelationPlot';
+import { formatNumber } from '../utils/formatNumber';
+import { saveTrainingData, updateTrainingData } from '../utils/localStorage';
 
 interface TrainingDashboardProps {
   progressHistory: TrainingProgress[];
 }
 
 export default function TrainingDashboard({ progressHistory }: TrainingDashboardProps) {
+  // Save to localStorage whenever progressHistory updates
+  useEffect(() => {
+    if (progressHistory.length === 0) {
+      return;
+    }
+
+    const currentProgress = progressHistory[progressHistory.length - 1];
+    const isCompleted = currentProgress?.status === 'completed';
+
+    // Update localStorage with latest data
+    updateTrainingData({
+      progressHistory: progressHistory,
+      featureImportance: currentProgress?.feature_importance,
+      correlationData: currentProgress?.correlation_data as Record<string, any>,
+      finalMetrics: currentProgress?.metrics
+    });
+
+    // If training is completed, ensure final save
+    if (isCompleted && currentProgress?.metrics) {
+      saveTrainingData({
+        progressHistory: progressHistory,
+        featureImportance: currentProgress.feature_importance,
+        correlationData: currentProgress.correlation_data as Record<string, any>,
+        finalMetrics: currentProgress.metrics,
+        timestamp: Date.now()
+      });
+    }
+  }, [progressHistory]);
   const lossData = progressHistory.map(p => ({
     epoch: p.epoch,
     'Train Loss': p.loss,
@@ -85,8 +118,11 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={lossData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="epoch" />
-              <YAxis />
+              <XAxis dataKey="epoch" label={{ value: 'Эпоха', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fontSize: '12px', fontWeight: 'bold' } }} />
+              <YAxis 
+                tickFormatter={(value) => formatNumber(value)} 
+                label={{ value: 'Loss (MSE)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '12px', fontWeight: 'bold' } }}
+              />
               <Tooltip />
               <Legend />
               <Line 
@@ -113,8 +149,11 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={maeData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="epoch" />
-              <YAxis />
+              <XAxis dataKey="epoch" label={{ value: 'Эпоха', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fontSize: '12px', fontWeight: 'bold' } }} />
+              <YAxis 
+                tickFormatter={(value) => formatNumber(value, 'т/сут')} 
+                label={{ value: 'MAE (т/сут)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '12px', fontWeight: 'bold' } }}
+              />
               <Tooltip />
               <Legend />
               <Line 
@@ -135,6 +174,16 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Feature Importance Chart - Show during training if available */}
+      {currentProgress?.feature_importance && Object.keys(currentProgress.feature_importance).length > 0 && (
+        <FeatureImportanceChart featureImportance={currentProgress.feature_importance} />
+      )}
+
+      {/* Correlation Plot - Show as soon as data is available */}
+      {currentProgress?.correlation_data && (
+        <CorrelationPlot correlationData={currentProgress.correlation_data} />
+      )}
     </div>
   );
 }

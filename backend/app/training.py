@@ -11,8 +11,13 @@ import os
 import pickle
 import asyncio
 from pathlib import Path
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict
 import uuid
+try:
+    import shap
+    SHAP_AVAILABLE = True
+except ImportError:
+    SHAP_AVAILABLE = False
 
 # Get the project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -116,6 +121,190 @@ def build_model(input_dim):
     return model
 
 
+def calculate_correlation_data(X: pd.DataFrame, y: pd.Series) -> Dict[str, Dict]:
+    """
+    Calculate correlation between all features and debit_oil.
+    
+    Parameters:
+    -----------
+    X : pd.DataFrame
+        Features dataframe
+    y : pd.Series
+        Target values (debit_oil_t_per_day)
+    
+    Returns:
+    --------
+    dict : Dictionary with correlation data for each feature
+        Format: {feature_name: {points: [...], correlation_coefficient: float}}
+    """
+    feature_names = ['P_downhole', 'Q_liquid', 'H_pump', 'WC_percent', 'GFR', 'choke_size']
+    debit_oil_values = y.values
+    max_points = 1000
+    
+    correlations = {}
+    
+    for feature_name in feature_names:
+        if feature_name not in X.columns:
+            continue
+            
+        feature_values = X[feature_name].values
+        
+        # Calculate correlation coefficient
+        correlation_coefficient = np.corrcoef(feature_values, debit_oil_values)[0, 1]
+        
+        # Handle NaN correlation
+        if np.isnan(correlation_coefficient):
+            correlation_coefficient = 0.0
+        
+        # Create points for scatter plot (sample if too many points)
+        if len(feature_values) > max_points:
+            indices = np.random.choice(len(feature_values), max_points, replace=False)
+            sampled_feature = feature_values[indices]
+            sampled_debit_oil = debit_oil_values[indices]
+        else:
+            sampled_feature = feature_values
+            sampled_debit_oil = debit_oil_values
+        
+        # Create points array with feature name as key
+        points = [
+            {feature_name: float(f), 'debit_oil': float(d)}
+            for f, d in zip(sampled_feature, sampled_debit_oil)
+        ]
+        
+        correlations[feature_name] = {
+            'points': points,
+            'correlation_coefficient': float(correlation_coefficient)
+        }
+    
+    return correlations
+
+
+def calculate_feature_importance_shap(model, X_test_scaled: np.ndarray, 
+                                        feature_names: list, 
+                                        scaler: StandardScaler) -> Dict[str, Dict[str, float]]:
+    """
+    Calculate feature importance using SHAP values.
+    
+    Parameters:
+    -----------
+    model : keras.Model
+        Trained model
+    X_test_scaled : np.ndarray
+        Scaled test features
+    feature_names : list
+        List of feature names
+    scaler : StandardScaler
+        Fitted scaler
+    
+    Returns:
+    --------
+    dict : Feature importance with mean and std
+    """
+    if not SHAP_AVAILABLE:
+        # Fallback: use simple gradient-based importance
+        return calculate_feature_importance_gradient(model, X_test_scaled, feature_names)
+    
+    try:
+        # Sample data for SHAP (SHAP can be slow on large datasets)
+        max_samples = min(100, len(X_test_scaled))
+        sample_indices = np.random.choice(len(X_test_scaled), max_samples, replace=False)
+        X_sample = X_test_scaled[sample_indices]
+        
+        # Create SHAP explainer
+        # Use a subset of training data as background
+        background_size = min(50, len(X_test_scaled))
+        background_indices = np.random.choice(len(X_test_scaled), background_size, replace=False)
+        background = X_test_scaled[background_indices]
+        
+        explainer = shap.DeepExplainer(model, background)
+        shap_values = explainer.shap_values(X_sample)
+        
+        # Handle SHAP output format (may be list or array)
+        if isinstance(shap_values, list):
+            shap_values = shap_values[0]
+        
+        # Calculate mean absolute SHAP values per feature
+        shap_abs = np.abs(shap_values)
+        mean_importance = np.mean(shap_abs, axis=0)
+        std_importance = np.std(shap_abs, axis=0)
+        
+        # Create result dictionary
+        result = {}
+        for i, feature_name in enumerate(feature_names):
+            result[feature_name] = {
+                'importance': float(mean_importance[i]),
+                'std': float(std_importance[i])
+            }
+        
+        return result
+    except Exception as e:
+        print(f"Warning: SHAP calculation failed: {e}. Using gradient-based method.")
+        return calculate_feature_importance_gradient(model, X_test_scaled, feature_names)
+
+
+def calculate_feature_importance_gradient(model, X_test_scaled: np.ndarray, 
+                                         feature_names: list) -> Dict[str, Dict[str, float]]:
+    """
+    Calculate feature importance using gradient-based method (fallback).
+    
+    Parameters:
+    -----------
+    model : keras.Model
+        Trained model
+    X_test_scaled : np.ndarray
+        Scaled test features
+    feature_names : list
+        List of feature names
+    
+    Returns:
+    --------
+    dict : Feature importance with mean and std
+    """
+    try:
+        # Sample data for gradient calculation
+        max_samples = min(100, len(X_test_scaled))
+        sample_indices = np.random.choice(len(X_test_scaled), max_samples, replace=False)
+        X_sample = X_test_scaled[sample_indices]
+        
+        # Calculate gradients
+        X_tensor = tf.constant(X_sample, dtype=tf.float32)
+        with tf.GradientTape() as tape:
+            tape.watch(X_tensor)
+            predictions = model(X_tensor)
+            # Sum predictions to get scalar for gradient calculation
+            loss = tf.reduce_sum(predictions)
+        
+        gradients = tape.gradient(loss, X_tensor)
+        gradient_abs = np.abs(gradients.numpy())
+        
+        # Calculate mean and std
+        mean_importance = np.mean(gradient_abs, axis=0)
+        std_importance = np.std(gradient_abs, axis=0)
+        
+        # Flatten if needed
+        if mean_importance.ndim > 1:
+            mean_importance = mean_importance.flatten()
+        if std_importance.ndim > 1:
+            std_importance = std_importance.flatten()
+        
+        # Create result dictionary
+        result = {}
+        for i, feature_name in enumerate(feature_names):
+            result[feature_name] = {
+                'importance': float(mean_importance[i]),
+                'std': float(std_importance[i])
+            }
+        
+        return result
+    except Exception as e:
+        print(f"Warning: Gradient-based importance calculation failed: {e}")
+        # Return equal importance as fallback
+        return {
+            name: {'importance': 1.0, 'std': 0.0}
+            for name in feature_names
+        }
+
+
 class SSETrainingCallback(keras.callbacks.Callback):
     """Keras callback that sends training progress via a callback function."""
     
@@ -153,6 +342,20 @@ async def train_model_async(csv_path: str, task_id: str, progress_callback: Call
     try:
         # Load and preprocess data
         X, y = load_and_preprocess_data(csv_path)
+        
+        # Calculate correlation data early (before normalization)
+        correlation_data = calculate_correlation_data(X, y)
+        
+        # Send initial progress update with correlation data
+        progress_callback({
+            'epoch': 0,
+            'loss': 0.0,
+            'val_loss': 0.0,
+            'mae': 0.0,
+            'val_mae': 0.0,
+            'status': 'training',
+            'correlation_data': correlation_data
+        })
         
         # Split into train and test sets (80/20)
         X_train, X_test, y_train, y_test = train_test_split(
@@ -199,6 +402,15 @@ async def train_model_async(csv_path: str, task_id: str, progress_callback: Call
         mse = mean_squared_error(y_test, y_pred)
         rmse = np.sqrt(mse)
         
+        # Calculate feature importance using SHAP
+        feature_names = [
+            'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
+            'GFR', 'choke_size'
+        ]
+        feature_importance = calculate_feature_importance_shap(
+            model, X_test_scaled, feature_names, scaler
+        )
+        
         # Save model and scaler
         model_path = PROJECT_ROOT / 'oil_production_model.keras'
         scaler_path = PROJECT_ROOT / 'scaler.pkl'
@@ -209,25 +421,23 @@ async def train_model_async(csv_path: str, task_id: str, progress_callback: Call
         with open(scaler_path, 'wb') as f:
             pickle.dump(scaler, f)
         
-        # Save feature names for reference
+        # Save feature names and importance for reference
         feature_info = {
-            'feature_names': [
-                'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-                'GFR', 'choke_size'
-            ],
+            'feature_names': feature_names,
             'target_name': 'debit_oil_t_per_day',
             'metrics': {
                 'r2': float(r2),
                 'mae': float(mae),
                 'mse': float(mse),
                 'rmse': float(rmse)
-            }
+            },
+            'feature_importance': feature_importance
         }
         
         with open(info_path, 'wb') as f:
             pickle.dump(feature_info, f)
         
-        # Send final progress update
+        # Send final progress update with feature importance and correlation
         progress_callback({
             'epoch': len(history.history['loss']),
             'loss': float(history.history['loss'][-1]),
@@ -240,7 +450,9 @@ async def train_model_async(csv_path: str, task_id: str, progress_callback: Call
                 'mae': float(mae),
                 'mse': float(mse),
                 'rmse': float(rmse)
-            }
+            },
+            'feature_importance': feature_importance,
+            'correlation_data': correlation_data
         })
         
     except Exception as e:

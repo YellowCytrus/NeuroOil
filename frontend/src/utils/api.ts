@@ -43,6 +43,19 @@ export interface ModelInfo {
   model_exists: boolean;
 }
 
+export interface FeatureImportance {
+  importance: number;
+  std: number;
+}
+
+export interface CorrelationData {
+  points: Array<{
+    [key: string]: number; // Dynamic key for feature name, always includes 'debit_oil'
+    debit_oil: number;
+  }>;
+  correlation_coefficient: number;
+}
+
 export interface TrainingProgress {
   epoch: number;
   loss: number;
@@ -56,6 +69,8 @@ export interface TrainingProgress {
     mse: number;
     rmse: number;
   };
+  feature_importance?: Record<string, FeatureImportance>;
+  correlation_data?: CorrelationData;
   error?: string;
 }
 
@@ -92,6 +107,11 @@ export const getDefaultDataset = async (): Promise<Blob> => {
   const response = await api.get('/default-dataset', {
     responseType: 'blob',
   });
+  return response.data;
+};
+
+export const getFeatureImportance = async (): Promise<Record<string, FeatureImportance>> => {
+  const response = await api.get<Record<string, FeatureImportance>>('/model/feature-importance');
   return response.data;
 };
 

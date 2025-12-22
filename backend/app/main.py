@@ -292,6 +292,44 @@ async def get_model_info():
         )
 
 
+@app.get("/api/model/feature-importance")
+async def get_feature_importance():
+    """
+    Get feature importance from the trained model.
+    """
+    try:
+        paths = get_model_paths()
+        
+        if not paths['model'].exists():
+            raise HTTPException(
+                status_code=404,
+                detail="Model not found. Please train the model first."
+            )
+        
+        # Load model info which contains feature importance
+        model, scaler, feature_info = load_model_and_scaler()
+        
+        if not feature_info or 'feature_importance' not in feature_info:
+            raise HTTPException(
+                status_code=404,
+                detail="Feature importance not available. Please retrain the model."
+            )
+        
+        return feature_info['feature_importance']
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Model not found. Please train the model first. {str(e)}"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error loading feature importance: {str(e)}"
+        )
+
+
 @app.get("/api/default-dataset")
 async def get_default_dataset():
     """

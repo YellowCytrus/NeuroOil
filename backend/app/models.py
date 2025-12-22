@@ -44,6 +44,10 @@ class TrainingProgress(BaseModel):
     mae: float
     val_mae: float
     status: str  # 'training', 'completed', 'error'
+    metrics: Optional[Dict] = None
+    feature_importance: Optional[Dict[str, Dict[str, float]]] = None
+    correlation_data: Optional[Dict] = None
+    error: Optional[str] = None
 
 
 

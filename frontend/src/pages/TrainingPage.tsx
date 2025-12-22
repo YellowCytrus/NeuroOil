@@ -3,6 +3,7 @@ import FileUpload from '../components/FileUpload';
 import TrainingDashboard from '../components/TrainingDashboard';
 import { useTrainingProgress } from '../hooks/useTrainingProgress';
 import { startTraining, TrainingProgress } from '../utils/api';
+import { loadTrainingData, clearTrainingData } from '../utils/localStorage';
 
 export default function TrainingPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -11,6 +12,40 @@ export default function TrainingPage() {
   const [isTraining, setIsTraining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { progress, error: progressError } = useTrainingProgress(taskId);
+
+  // Load saved data from localStorage on mount
+  useEffect(() => {
+    const savedData = loadTrainingData();
+    if (savedData && savedData.progressHistory.length > 0) {
+      // If there's a completed training, restore all data
+      const lastProgress = savedData.progressHistory[savedData.progressHistory.length - 1];
+      if (lastProgress?.status === 'completed') {
+        // Merge saved data into progress history
+        const updatedHistory = savedData.progressHistory.map((p, index) => {
+          if (index === savedData.progressHistory.length - 1) {
+            return {
+              ...p,
+              feature_importance: savedData.featureImportance || p.feature_importance,
+              correlation_data: savedData.correlationData || p.correlation_data,
+              metrics: savedData.finalMetrics || p.metrics
+            };
+          }
+          // Also restore correlation_data for initial progress update if available
+          if (p.epoch === 0 && savedData.correlationData) {
+            return {
+              ...p,
+              correlation_data: savedData.correlationData
+            };
+          }
+          return p;
+        });
+        setProgressHistory(updatedHistory);
+      } else {
+        // Restore progress history as is
+        setProgressHistory(savedData.progressHistory);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (progress) {
@@ -41,6 +76,8 @@ export default function TrainingPage() {
       setIsTraining(true);
       setProgressHistory([]);
       setTaskId(null); // Reset task ID
+      // Clear localStorage when starting new training (optional - comment out if you want to keep old data)
+      // clearTrainingData();
       
       console.log('Starting training...', selectedFile ? `with file: ${selectedFile.name}` : 'with default dataset');
       const response = await startTraining(selectedFile || undefined);
