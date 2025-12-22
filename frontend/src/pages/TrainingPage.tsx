@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import FileUpload from '../components/FileUpload';
 import TrainingDashboard from '../components/TrainingDashboard';
 import { useTrainingProgress } from '../hooks/useTrainingProgress';
-import { startTraining, TrainingProgress } from '../utils/api';
+import { startTraining, TrainingProgress, extractErrorMessage } from '../utils/api';
 import { loadTrainingData } from '../utils/localStorage';
 
 export default function TrainingPage() {
@@ -85,7 +85,7 @@ export default function TrainingPage() {
       setTaskId(response.task_id);
     } catch (err: any) {
       console.error('Error starting training:', err);
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка при запуске обучения';
+      const errorMessage = extractErrorMessage(err, 'Ошибка при запуске обучения');
       setError(errorMessage);
       setIsTraining(false);
       setTaskId(null);

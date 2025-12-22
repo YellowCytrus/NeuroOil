@@ -4,6 +4,49 @@ import axios from 'axios';
 // В production без VITE_API_URL все запросы идут на /api (через nginx reverse proxy)
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+/**
+ * Safely extracts error message from FastAPI error response
+ * Handles both string errors and validation error arrays
+ */
+export function extractErrorMessage(error: any, fallback: string = 'Произошла ошибка'): string {
+  if (!error) return fallback;
+  
+  // If it's already a string, return it
+  if (typeof error === 'string') return error;
+  
+  // Try to get error from axios response
+  const detail = error.response?.data?.detail;
+  
+  if (!detail) {
+    return error.message || fallback;
+  }
+  
+  // If detail is a string, return it
+  if (typeof detail === 'string') {
+    return detail;
+  }
+  
+  // If detail is an array (validation errors), format them
+  if (Array.isArray(detail)) {
+    return detail.map((err: any) => {
+      const loc = Array.isArray(err.loc) ? err.loc.join('.') : err.loc;
+      return `${loc}: ${err.msg}`;
+    }).join('; ');
+  }
+  
+  // If detail is an object, try to stringify it safely
+  if (typeof detail === 'object') {
+    // If it has a message property
+    if (detail.message) return String(detail.message);
+    // If it has a msg property (validation error)
+    if (detail.msg) return String(detail.msg);
+    // Otherwise, return a generic message
+    return 'Ошибка валидации данных';
+  }
+  
+  return fallback;
+}
+
 export interface PredictionRequest {
   P_downhole: number;
   Q_liquid: number;

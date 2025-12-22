@@ -199,7 +199,11 @@ async def make_prediction(request: PredictionRequest):
             'H_pump': request.H_pump,
             'WC_percent': request.WC_percent,
             'GFR': request.GFR,
-            'choke_size': request.choke_size
+            'T_downhole': request.T_downhole,
+            'P_annulus': request.P_annulus,
+            'P_wellhead': request.P_wellhead,
+            'T_wellhead': request.T_wellhead,
+            'dp_choke': request.dp_choke
         }
         
         # Make prediction
@@ -234,10 +238,10 @@ async def get_model_info():
         
         if not paths['model'].exists():
             return ModelInfoResponse(
-            feature_names=[
-                'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-                'GFR', 'choke_size'
-            ],
+                feature_names=[
+                    'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
+                    'GFR', 'T_downhole', 'P_annulus', 'P_wellhead', 'T_wellhead', 'dp_choke'
+                ],
                 target_name='debit_oil_t_per_day',
                 architecture={
                     'layers': [
@@ -263,10 +267,10 @@ async def get_model_info():
         return ModelInfoResponse(
             feature_names=feature_info.get('feature_names', [
                 'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-                'GFR', 'choke_size'
+                'GFR', 'T_downhole', 'P_annulus', 'P_wellhead', 'T_wellhead', 'dp_choke'
             ]) if feature_info else [
                 'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-                'GFR', 'choke_size'
+                'GFR', 'T_downhole', 'P_annulus', 'P_wellhead', 'T_wellhead', 'dp_choke'
             ],
             target_name=feature_info.get('target_name', 'debit_oil_t_per_day') if feature_info else 'debit_oil_t_per_day',
             architecture=architecture,
@@ -278,7 +282,7 @@ async def get_model_info():
         return ModelInfoResponse(
             feature_names=[
                 'P_downhole', 'Q_liquid', 'H_pump', 'WC_percent',
-                'GFR', 'choke_size'
+                'GFR', 'T_downhole', 'P_annulus', 'P_wellhead', 'T_wellhead', 'dp_choke'
             ],
             target_name='debit_oil_t_per_day',
             architecture={

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import PredictionSliders from '../components/PredictionSliders';
 import PredictionFeatureImportance from '../components/PredictionFeatureImportance';
-import { getFeatureImportance, FeatureImportance as FeatureImportanceType } from '../utils/api';
+import { getFeatureImportance, FeatureImportance as FeatureImportanceType, extractErrorMessage } from '../utils/api';
 
 export default function PredictionPage() {
   const [featureImportance, setFeatureImportance] = useState<Record<string, FeatureImportanceType> | null>(null);
@@ -18,7 +18,7 @@ export default function PredictionPage() {
       } catch (err: any) {
         // Don't show error if model doesn't exist yet - it's expected
         if (err.response?.status !== 404) {
-          setError(err.response?.data?.detail || err.message || 'Ошибка при загрузке важности признаков');
+          setError(extractErrorMessage(err, 'Ошибка при загрузке важности признаков'));
         }
       } finally {
         setLoading(false);

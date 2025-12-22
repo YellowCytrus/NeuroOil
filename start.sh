@@ -78,6 +78,7 @@ echo "==> Сборка frontend"
 FRONTEND_DIR="$APP_DIR/frontend"
 sudo -u "$APP_USER" bash -lc "
   cd '$FRONTEND_DIR' && \
+  rm -rf dist node_modules/.vite && \
   npm install && \
   npm run build
 "

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { makePrediction, PredictionRequest, PredictionResponse } from '../utils/api';
+import { makePrediction, PredictionRequest, PredictionResponse, extractErrorMessage } from '../utils/api';
 
 interface FeatureConfig {
   name: string;
@@ -135,7 +135,7 @@ export default function PredictionSliders() {
       const result = await makePrediction(newValues);
       setPrediction(result);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Ошибка при предсказании');
+      setError(extractErrorMessage(err, 'Ошибка при предсказании'));
       setPrediction(null);
     } finally {
       setLoading(false);
