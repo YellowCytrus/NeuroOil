@@ -123,10 +123,17 @@ export default function PredictionSliders() {
     if (trainingData?.correlationData) {
       // Handle both formats: Record<string, CorrelationData> or legacy single CorrelationData
       const data = trainingData.correlationData;
-      if ('points' in data && 'correlation_coefficient' in data) {
+      // Check if it's legacy format (single CorrelationData object)
+      // Legacy format has 'points' and 'correlation_coefficient' at top level
+      // New format has feature names as keys (like 'P_downhole', 'Q_liquid', etc.)
+      const featureNames = ['P_downhole', 'Q_liquid', 'H_pump', 'WC_percent', 'GFR'];
+      const hasFeatureKeys = featureNames.some(name => name in data);
+      
+      if ('points' in data && 'correlation_coefficient' in data && !hasFeatureKeys) {
         // Legacy format - single correlation
-        return { 'Q_liquid': data as CorrelationData };
+        return { 'Q_liquid': data as unknown as CorrelationData };
       }
+      // New format - Record<string, CorrelationData>
       return data as Record<string, CorrelationData>;
     }
     return null;
