@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrainingProgress, CorrelationData } from '../utils/api';
-import FeatureImportanceChart from './FeatureImportanceChart';
 import CorrelationPlot from './CorrelationPlot';
 import { formatNumber } from '../utils/formatNumber';
 import { saveTrainingData, updateTrainingData } from '../utils/localStorage';
@@ -23,7 +22,6 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
     // Update localStorage with latest data
     updateTrainingData({
       progressHistory: progressHistory,
-      featureImportance: currentProgress?.feature_importance,
       correlationData: currentProgress?.correlation_data as Record<string, any>,
       finalMetrics: currentProgress?.metrics
     });
@@ -32,7 +30,6 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
     if (isCompleted && currentProgress?.metrics) {
       saveTrainingData({
         progressHistory: progressHistory,
-        featureImportance: currentProgress.feature_importance,
         correlationData: currentProgress.correlation_data as Record<string, any>,
         finalMetrics: currentProgress.metrics,
         timestamp: Date.now()
@@ -174,11 +171,6 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
           </ResponsiveContainer>
         </div>
       </div>
-
-      {/* Feature Importance Chart - Show during training if available */}
-      {currentProgress?.feature_importance && Object.keys(currentProgress.feature_importance).length > 0 && (
-        <FeatureImportanceChart featureImportance={currentProgress.feature_importance} />
-      )}
 
       {/* Correlation Plot - Show as soon as data is available */}
       {currentProgress?.correlation_data && (

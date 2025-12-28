@@ -25,7 +25,6 @@ export default function TrainingPage() {
           if (index === savedData.progressHistory.length - 1) {
             return {
               ...p,
-              feature_importance: savedData.featureImportance || p.feature_importance,
               correlation_data: (savedData.correlationData || p.correlation_data) as TrainingProgress['correlation_data'],
               metrics: savedData.finalMetrics || p.metrics
             };

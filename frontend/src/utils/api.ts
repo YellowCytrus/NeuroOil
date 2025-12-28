@@ -157,11 +157,6 @@ export const getDefaultDataset = async (): Promise<Blob> => {
   return response.data;
 };
 
-export const getFeatureImportance = async (): Promise<Record<string, FeatureImportance>> => {
-  const response = await api.get<Record<string, FeatureImportance>>('/model/feature-importance');
-  return response.data;
-};
-
 export const subscribeToTrainingProgress = (
   taskId: string,
   onProgress: (progress: TrainingProgress) => void,

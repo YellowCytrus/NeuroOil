@@ -1,10 +1,9 @@
-import { TrainingProgress, FeatureImportance, CorrelationData } from './api';
+import { TrainingProgress, CorrelationData } from './api';
 
 const STORAGE_KEY = 'oil_production_training_data';
 
 export interface SavedTrainingData {
   progressHistory: TrainingProgress[];
-  featureImportance?: Record<string, FeatureImportance>;
   correlationData?: Record<string, CorrelationData>;
   finalMetrics?: {
     r2: number;
