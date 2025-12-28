@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart } from 'recharts';
 import { CorrelationData } from '../utils/api';
 import { formatNumber } from '../utils/formatNumber';
@@ -41,8 +41,51 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
     ? { 'Q_liquid': correlationData as unknown as CorrelationData }
     : (correlationData || {});
 
-  const featureNames = Object.keys(correlations);
+  // Sort features by absolute correlation coefficient (descending)
+  const featureNames = Object.keys(correlations).sort((a, b) => {
+    const corrA = Math.abs(correlations[a]?.correlation_coefficient || 0);
+    const corrB = Math.abs(correlations[b]?.correlation_coefficient || 0);
+    return corrB - corrA; // Sort descending (larger to smaller)
+  });
+  
   const [selectedFeature, setSelectedFeature] = useState<string>(featureNames[0] || '');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Check scroll position
+  const checkScrollPosition = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollPosition();
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition);
+      window.addEventListener('resize', checkScrollPosition);
+      return () => {
+        container.removeEventListener('scroll', checkScrollPosition);
+        window.removeEventListener('resize', checkScrollPosition);
+      };
+    }
+  }, [featureNames]);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
 
   if (!correlations || featureNames.length === 0) {
     return (
@@ -95,20 +138,20 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
     });
   }
 
-  // Determine correlation strength
+  // Determine correlation strength (yellow/moderate centered at 0.3)
   const absCorr = Math.abs(correlation_coefficient);
   let correlationStrength = '';
   let correlationColor = '';
-  if (absCorr >= 0.9) {
+  if (absCorr >= 0.7) {
     correlationStrength = 'Очень сильная';
     correlationColor = 'text-green-600';
-  } else if (absCorr >= 0.7) {
+  } else if (absCorr >= 0.5) {
     correlationStrength = 'Сильная';
     correlationColor = 'text-green-500';
-  } else if (absCorr >= 0.5) {
+  } else if (absCorr >= 0.3) {
     correlationStrength = 'Умеренная';
     correlationColor = 'text-yellow-600';
-  } else if (absCorr >= 0.3) {
+  } else if (absCorr >= 0.25) {
     correlationStrength = 'Слабая';
     correlationColor = 'text-orange-500';
   } else {
@@ -126,23 +169,60 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
       {/* Tabs */}
       {featureNames.length > 1 && (
         <div className="mb-4 border-b-2 border-gray-200">
-          <nav className="-mb-px flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="relative">
+            {/* Left Arrow */}
+            {canScrollLeft && (
+              <button
+                onClick={scrollLeft}
+                className="absolute left-0 top-0 bottom-0 z-10 bg-white/90 hover:bg-white border-r border-gray-200 px-2 flex items-center justify-center shadow-md transition-all duration-200"
+                aria-label="Прокрутить влево"
+              >
+                <svg className="w-5 h-5 text-gray-700 hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Right Arrow */}
+            {canScrollRight && (
+              <button
+                onClick={scrollRight}
+                className="absolute right-0 top-0 bottom-0 z-10 bg-white/90 hover:bg-white border-l border-gray-200 px-2 flex items-center justify-center shadow-md transition-all duration-200"
+                aria-label="Прокрутить вправо"
+              >
+                <svg className="w-5 h-5 text-gray-700 hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+
+            <nav 
+              ref={scrollContainerRef}
+              className="-mb-px flex space-x-2 overflow-x-auto pb-2 scrollbar-visible"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#6366f1 #e5e7eb'
+              }}
+            >
             {featureNames.map((feature) => {
               const isActive = feature === selectedFeature;
               const featureData = correlations[feature];
               const corr = featureData?.correlation_coefficient || 0;
               const absCorr = Math.abs(corr);
               
-              // Color based on correlation strength
+              // Color based on correlation strength (yellow/moderate centered at 0.3)
               let tabColor = 'text-gray-500 border-gray-300 bg-gray-50';
               let activeTabColor = 'text-gray-700 border-gray-500 bg-white shadow-md';
               if (absCorr >= 0.7) {
                 tabColor = isActive ? 'text-green-700 border-green-500 bg-green-50 shadow-md' : 'text-green-600 border-gray-300 bg-white hover:bg-green-50';
                 activeTabColor = 'text-green-700 border-green-500 bg-green-50 shadow-md';
               } else if (absCorr >= 0.5) {
+                tabColor = isActive ? 'text-green-600 border-green-400 bg-green-50 shadow-md' : 'text-green-500 border-gray-300 bg-white hover:bg-green-50';
+                activeTabColor = 'text-green-600 border-green-400 bg-green-50 shadow-md';
+              } else if (absCorr >= 0.3) {
                 tabColor = isActive ? 'text-yellow-700 border-yellow-500 bg-yellow-50 shadow-md' : 'text-yellow-600 border-gray-300 bg-white hover:bg-yellow-50';
                 activeTabColor = 'text-yellow-700 border-yellow-500 bg-yellow-50 shadow-md';
-              } else if (absCorr >= 0.3) {
+              } else if (absCorr >= 0.25) {
                 tabColor = isActive ? 'text-orange-700 border-orange-500 bg-orange-50 shadow-md' : 'text-orange-600 border-gray-300 bg-white hover:bg-orange-50';
                 activeTabColor = 'text-orange-700 border-orange-500 bg-orange-50 shadow-md';
               } else {
@@ -167,10 +247,16 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
                   <span className={`ml-1 sm:ml-2 text-xs font-bold ${isActive ? '' : 'opacity-75'}`}>
                     ({corr.toFixed(3)})
                   </span>
+                  {absCorr < 0.25 && (
+                    <span className="ml-1 sm:ml-2 text-xs" title="Можно убрать из модели">
+                      🗑️
+                    </span>
+                  )}
                 </button>
               );
             })}
-          </nav>
+            </nav>
+          </div>
         </div>
       )}
 
@@ -187,19 +273,24 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
             {correlationStrength}
           </div>
         </div>
-        {correlation_coefficient > 0.7 && (
+        {absCorr >= 0.5 && (
           <p className="text-xs text-gray-600 mt-2">
             ✓ Наблюдается прямая зависимость между debit_oil (т/сут) и {featureLabel}
           </p>
         )}
-        {correlation_coefficient <= 0.7 && correlation_coefficient > 0.3 && (
+        {absCorr >= 0.3 && absCorr < 0.5 && (
           <p className="text-xs text-gray-600 mt-2">
             ⚠ Умеренная зависимость между debit_oil (т/сут) и {featureLabel}
           </p>
         )}
-        {correlation_coefficient <= 0.3 && (
+        {absCorr >= 0.25 && absCorr < 0.3 && (
           <p className="text-xs text-gray-600 mt-2">
             ✗ Прямая зависимость между debit_oil (т/сут) и {featureLabel} слабая или отсутствует
+          </p>
+        )}
+        {absCorr < 0.25 && (
+          <p className="text-xs text-red-600 font-semibold mt-2">
+            ✗ Прямая зависимость между debit_oil (т/сут) и {featureLabel} очень слабая. Этот параметр можно убрать из модели.
           </p>
         )}
       </div>

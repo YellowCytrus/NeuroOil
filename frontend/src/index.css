@@ -35,6 +35,32 @@ button, a, input[type="range"], [role="button"] {
   display: none;
 }
 
+/* Visible scrollbar styles */
+.scrollbar-visible {
+  scrollbar-width: thin;
+  scrollbar-color: #6366f1 #e5e7eb;
+}
+
+.scrollbar-visible::-webkit-scrollbar {
+  height: 8px;
+  display: block;
+}
+
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 4px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: #4f46e5;
+}
+
 /* Improve range slider touch targets */
 input[type="range"] {
   -webkit-appearance: none;
