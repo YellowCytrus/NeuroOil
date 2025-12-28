@@ -158,17 +158,17 @@ export default function PredictionSliders() {
     <>
       {/* Sliders - Left Column (2/3 width) */}
       <div className="lg:col-span-2">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Параметры для предсказания</h2>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Параметры для предсказания</h2>
           
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {featureConfigs.map((config) => (
               <div key={config.name} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-medium text-gray-700">
                     {config.label}
                   </label>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-500 font-semibold">
                     {values[config.key].toFixed(config.step < 1 ? 1 : 0)} {config.unit}
                   </span>
                 </div>
@@ -179,7 +179,8 @@ export default function PredictionSliders() {
                   step={config.step}
                   value={values[config.key]}
                   onChange={(e) => handleSliderChange(config.key, parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  className="w-full h-3 sm:h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 touch-manipulation"
+                  style={{ minHeight: '44px' }}
                 />
                 <div className="flex justify-between text-xs text-gray-400">
                   <span>{config.min} {config.unit}</span>
@@ -191,34 +192,34 @@ export default function PredictionSliders() {
         </div>
       </div>
 
-      {/* Prediction Result - Right Column (1/3 width), Sticky */}
+      {/* Prediction Result - Right Column (1/3 width), Sticky on desktop only */}
       <div className="lg:col-span-1">
         <div className="lg:sticky lg:top-6">
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg shadow-lg p-8 border-2 border-indigo-200">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Результат предсказания</h3>
+          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 border-2 border-indigo-200">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-4">Результат предсказания</h3>
             
             {loading && (
-              <div className="text-center py-8">
+              <div className="text-center py-6 sm:py-8">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <p className="mt-2 text-gray-600">Вычисление...</p>
+                <p className="mt-2 text-sm sm:text-base text-gray-600">Вычисление...</p>
               </div>
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 text-sm">{error}</p>
+              <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 sm:p-4 shadow-sm">
+                <p className="text-red-800 text-sm font-medium">{error}</p>
               </div>
             )}
 
             {prediction && !loading && !error && (
               <div className="text-center">
-                <div className="text-5xl font-bold text-indigo-600 mb-2">
+                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-indigo-600 mb-2">
                   {prediction.prediction <= 0 ? '~0' : prediction.prediction.toFixed(2)}
                 </div>
-                <div className="text-xl text-gray-600">
+                <div className="text-lg sm:text-xl text-gray-600">
                   {prediction.unit}
                 </div>
-                <div className="mt-4 text-sm text-gray-500">
+                <div className="mt-4 text-xs sm:text-sm text-gray-500">
                   Предсказанный дебит нефти
                 </div>
                 {prediction.prediction <= 0 && (
@@ -230,7 +231,7 @@ export default function PredictionSliders() {
             )}
 
             {!prediction && !loading && !error && (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-6 sm:py-8 text-gray-400 text-sm sm:text-base">
                 Измените параметры для получения предсказания
               </div>
             )}

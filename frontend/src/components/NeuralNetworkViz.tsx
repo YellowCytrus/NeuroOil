@@ -104,10 +104,10 @@ export default function NeuralNetworkViz({ progress }: NeuralNetworkVizProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">Визуализация нейронной сети</h3>
-      <div className="relative" style={{ width: '100%', height: '400px', overflow: 'visible' }}>
-        <svg width="100%" height="100%" viewBox="0 0 800 400" className="overflow-visible">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border-2 border-gray-100">
+      <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Визуализация нейронной сети</h3>
+      <div className="relative overflow-x-auto" style={{ width: '100%', height: '300px', minHeight: '300px' }}>
+        <svg width="800" height="300" viewBox="0 0 800 300" className="overflow-visible" preserveAspectRatio="xMidYMid meet">
           {/* Connections */}
           {connections.map((conn, idx) => {
             const fromNode = nodes.find(n => n.id === conn.from);
@@ -167,11 +167,11 @@ export default function NeuralNetworkViz({ progress }: NeuralNetworkVizProps) {
           <text x={650} y={50} className="text-sm font-semibold fill-gray-700">Выход (1)</text>
         </svg>
       </div>
-      <div className="mt-4 text-sm text-gray-600 text-center">
+      <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600 text-center">
         {progress?.status === 'training' ? (
-          <span className="text-indigo-600">🔄 Обучение в процессе...</span>
+          <span className="text-indigo-600 font-medium">🔄 Обучение в процессе...</span>
         ) : progress?.status === 'completed' ? (
-          <span className="text-green-600">✓ Обучение завершено</span>
+          <span className="text-green-600 font-medium">✓ Обучение завершено</span>
         ) : (
           <span>Ожидание начала обучения</span>
         )}

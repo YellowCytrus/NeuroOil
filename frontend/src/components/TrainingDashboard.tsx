@@ -53,30 +53,30 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
   const finalMetrics = currentProgress?.metrics;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Текущая эпоха</div>
-          <div className="text-2xl font-bold text-indigo-600">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 border-2 border-gray-100">
+          <div className="text-xs sm:text-sm text-gray-500">Текущая эпоха</div>
+          <div className="text-xl sm:text-2xl font-bold text-indigo-600">
             {currentProgress?.epoch || 0}
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Train Loss</div>
-          <div className="text-2xl font-bold text-blue-600">
+        <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 border-2 border-gray-100">
+          <div className="text-xs sm:text-sm text-gray-500">Train Loss</div>
+          <div className="text-xl sm:text-2xl font-bold text-blue-600">
             {currentProgress?.loss ? currentProgress.loss.toFixed(4) : '—'}
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Val Loss</div>
-          <div className="text-2xl font-bold text-purple-600">
+        <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 border-2 border-gray-100">
+          <div className="text-xs sm:text-sm text-gray-500">Val Loss</div>
+          <div className="text-xl sm:text-2xl font-bold text-purple-600">
             {currentProgress?.val_loss ? currentProgress.val_loss.toFixed(4) : '—'}
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Статус</div>
-          <div className="text-2xl font-bold text-green-600">
+        <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 border-2 border-gray-100">
+          <div className="text-xs sm:text-sm text-gray-500">Статус</div>
+          <div className="text-lg sm:text-xl font-bold text-green-600">
             {isCompleted ? '✓ Завершено' : currentProgress?.status === 'training' ? '🔄 Обучение' : '—'}
           </div>
         </div>
@@ -84,35 +84,35 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
 
       {/* Final Metrics */}
       {isCompleted && finalMetrics && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow p-6 border border-green-200">
-          <h3 className="text-lg font-semibold text-green-800 mb-4">Финальные метрики</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-md p-4 sm:p-6 border-2 border-green-200">
+          <h3 className="text-base sm:text-lg font-semibold text-green-800 mb-3 sm:mb-4">Финальные метрики</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div>
-              <div className="text-sm text-green-600">R² Score</div>
-              <div className="text-xl font-bold text-green-800">{finalMetrics.r2.toFixed(4)}</div>
+              <div className="text-xs sm:text-sm text-green-600">R² Score</div>
+              <div className="text-lg sm:text-xl font-bold text-green-800">{finalMetrics.r2.toFixed(4)}</div>
             </div>
             <div>
-              <div className="text-sm text-green-600">MAE</div>
-              <div className="text-xl font-bold text-green-800">{finalMetrics.mae.toFixed(2)} т/сут</div>
+              <div className="text-xs sm:text-sm text-green-600">MAE</div>
+              <div className="text-lg sm:text-xl font-bold text-green-800">{finalMetrics.mae.toFixed(2)} т/сут</div>
             </div>
             <div>
-              <div className="text-sm text-green-600">MSE</div>
-              <div className="text-xl font-bold text-green-800">{finalMetrics.mse.toFixed(2)}</div>
+              <div className="text-xs sm:text-sm text-green-600">MSE</div>
+              <div className="text-lg sm:text-xl font-bold text-green-800">{finalMetrics.mse.toFixed(2)}</div>
             </div>
             <div>
-              <div className="text-sm text-green-600">RMSE</div>
-              <div className="text-xl font-bold text-green-800">{finalMetrics.rmse.toFixed(2)} т/сут</div>
+              <div className="text-xs sm:text-sm text-green-600">RMSE</div>
+              <div className="text-lg sm:text-xl font-bold text-green-800">{finalMetrics.rmse.toFixed(2)} т/сут</div>
             </div>
           </div>
         </div>
       )}
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Loss Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Loss (MSE)</h3>
-          <ResponsiveContainer width="100%" height={400}>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border-2 border-gray-100">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Loss (MSE)</h3>
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={lossData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="epoch" label={{ value: 'Эпоха', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fontSize: '12px', fontWeight: 'bold' } }} />
@@ -141,9 +141,9 @@ export default function TrainingDashboard({ progressHistory }: TrainingDashboard
         </div>
 
         {/* MAE Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">MAE</h3>
-          <ResponsiveContainer width="100%" height={400}>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border-2 border-gray-100">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">MAE</h3>
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={maeData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="epoch" label={{ value: 'Эпоха', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fontSize: '12px', fontWeight: 'bold' } }} />

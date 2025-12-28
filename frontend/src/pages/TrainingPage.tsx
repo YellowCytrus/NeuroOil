@@ -93,8 +93,8 @@ export default function TrainingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Обучение модели</h2>
+      <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Обучение модели</h2>
         
         <div className="space-y-4">
           <div>
@@ -112,10 +112,10 @@ export default function TrainingPage() {
             disabled={isTraining}
             className={`
               w-full py-3 px-4 rounded-lg font-semibold text-white
-              transition-colors duration-200
+              transition-all duration-200 border-2
               ${isTraining
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800'
+                ? 'bg-gray-400 border-gray-500 cursor-not-allowed shadow-sm'
+                : 'bg-indigo-600 border-indigo-700 hover:bg-indigo-700 hover:border-indigo-800 hover:shadow-lg active:bg-indigo-800 active:border-indigo-900 active:shadow-md shadow-md'
               }
             `}
           >
@@ -140,8 +140,8 @@ export default function TrainingPage() {
       )}
 
       {!isTraining && progressHistory.length === 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-          <p className="text-blue-800">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6 text-center">
+          <p className="text-blue-800 text-sm sm:text-base">
             Загрузите CSV файл или используйте файл по умолчанию, затем нажмите "Начать обучение"
           </p>
         </div>

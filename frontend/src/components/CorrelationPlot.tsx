@@ -120,13 +120,13 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
   const featureUnit = featureUnits[selectedFeature] || '';
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">Зависимость параметров от debit_oil</h3>
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border-2 border-gray-100">
+      <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Зависимость параметров от debit_oil</h3>
       
       {/* Tabs */}
       {featureNames.length > 1 && (
-        <div className="mb-4 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-2 overflow-x-auto">
+        <div className="mb-4 border-b-2 border-gray-200">
+          <nav className="-mb-px flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
             {featureNames.map((feature) => {
               const isActive = feature === selectedFeature;
               const featureData = correlations[feature];
@@ -134,15 +134,20 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
               const absCorr = Math.abs(corr);
               
               // Color based on correlation strength
-              let tabColor = 'text-gray-500 border-gray-300';
+              let tabColor = 'text-gray-500 border-gray-300 bg-gray-50';
+              let activeTabColor = 'text-gray-700 border-gray-500 bg-white shadow-md';
               if (absCorr >= 0.7) {
-                tabColor = isActive ? 'text-green-600 border-green-500' : 'text-green-500 border-gray-300';
+                tabColor = isActive ? 'text-green-700 border-green-500 bg-green-50 shadow-md' : 'text-green-600 border-gray-300 bg-white hover:bg-green-50';
+                activeTabColor = 'text-green-700 border-green-500 bg-green-50 shadow-md';
               } else if (absCorr >= 0.5) {
-                tabColor = isActive ? 'text-yellow-600 border-yellow-500' : 'text-yellow-500 border-gray-300';
+                tabColor = isActive ? 'text-yellow-700 border-yellow-500 bg-yellow-50 shadow-md' : 'text-yellow-600 border-gray-300 bg-white hover:bg-yellow-50';
+                activeTabColor = 'text-yellow-700 border-yellow-500 bg-yellow-50 shadow-md';
               } else if (absCorr >= 0.3) {
-                tabColor = isActive ? 'text-orange-600 border-orange-500' : 'text-orange-500 border-gray-300';
+                tabColor = isActive ? 'text-orange-700 border-orange-500 bg-orange-50 shadow-md' : 'text-orange-600 border-gray-300 bg-white hover:bg-orange-50';
+                activeTabColor = 'text-orange-700 border-orange-500 bg-orange-50 shadow-md';
               } else {
-                tabColor = isActive ? 'text-red-600 border-red-500' : 'text-red-500 border-gray-300';
+                tabColor = isActive ? 'text-red-700 border-red-500 bg-red-50 shadow-md' : 'text-red-600 border-gray-300 bg-white hover:bg-red-50';
+                activeTabColor = 'text-red-700 border-red-500 bg-red-50 shadow-md';
               }
               
               return (
@@ -150,15 +155,16 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
                   key={feature}
                   onClick={() => setSelectedFeature(feature)}
                   className={`
-                    px-4 py-2 text-sm font-medium border-b-2 transition-colors
+                    px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-2 rounded-t-lg transition-all duration-200 whitespace-nowrap
                     ${isActive 
-                      ? `${tabColor} border-b-2` 
-                      : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+                      ? `${activeTabColor} border-b-2` 
+                      : `${tabColor} border-transparent hover:border-gray-300 active:bg-gray-100`
                     }
                   `}
                 >
-                  {featureLabels[feature] || feature}
-                  <span className={`ml-2 text-xs ${isActive ? 'font-bold' : ''}`}>
+                  <span className="hidden sm:inline">{featureLabels[feature] || feature}</span>
+                  <span className="sm:hidden">{featureLabels[feature]?.split(' ')[0] || feature}</span>
+                  <span className={`ml-1 sm:ml-2 text-xs font-bold ${isActive ? '' : 'opacity-75'}`}>
                     ({corr.toFixed(3)})
                   </span>
                 </button>
@@ -169,15 +175,15 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
       )}
 
       {/* Correlation Info */}
-      <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <div className="flex items-center justify-between">
+      <div className="mb-4 p-3 sm:p-4 bg-blue-50 rounded-lg border-2 border-blue-200 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <span className="text-sm text-gray-600">Коэффициент корреляции ({featureLabel}): </span>
-            <span className={`text-lg font-bold ${correlationColor}`}>
+            <span className="text-xs sm:text-sm text-gray-600">Коэффициент корреляции ({featureLabel}): </span>
+            <span className={`text-base sm:text-lg font-bold ${correlationColor}`}>
               {correlation_coefficient.toFixed(4)}
             </span>
           </div>
-          <div className={`text-sm font-semibold ${correlationColor}`}>
+          <div className={`text-xs sm:text-sm font-semibold ${correlationColor}`}>
             {correlationStrength}
           </div>
         </div>
@@ -199,7 +205,7 @@ export default function CorrelationPlot({ correlationData }: CorrelationPlotProp
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={300}>
         <ComposedChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 

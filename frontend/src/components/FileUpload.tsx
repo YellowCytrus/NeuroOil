@@ -51,13 +51,14 @@ export default function FileUpload({ onFileSelect, defaultFileName }: FileUpload
         onDrop={handleDrop}
         onClick={handleClick}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-          transition-colors duration-200
+          border-2 border-dashed rounded-lg p-4 sm:p-6 lg:p-8 text-center cursor-pointer
+          transition-all duration-200 shadow-sm touch-manipulation
           ${isDragging 
-            ? 'border-indigo-500 bg-indigo-50' 
-            : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'
+            ? 'border-indigo-500 bg-indigo-50 shadow-md border-solid' 
+            : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md active:bg-indigo-100 active:border-indigo-500'
           }
         `}
+        style={{ minHeight: '120px' }}
       >
         <input
           ref={fileInputRef}
@@ -66,9 +67,9 @@ export default function FileUpload({ onFileSelect, defaultFileName }: FileUpload
           onChange={handleFileInput}
           className="hidden"
         />
-        <div className="space-y-2">
+        <div className="space-y-2 flex flex-col items-center justify-center h-full">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-400"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -80,8 +81,8 @@ export default function FileUpload({ onFileSelect, defaultFileName }: FileUpload
               strokeLinejoin="round"
             />
           </svg>
-          <div className="text-sm text-gray-600">
-            <span className="font-semibold">Нажмите для загрузки</span> или перетащите файл сюда
+          <div className="text-xs sm:text-sm text-gray-600">
+            <span className="font-semibold">Нажмите для загрузки</span> <span className="hidden sm:inline">или перетащите файл сюда</span>
           </div>
           <p className="text-xs text-gray-500">
             {defaultFileName && !selectedFile && `По умолчанию: ${defaultFileName}`}
