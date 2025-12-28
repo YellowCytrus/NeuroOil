@@ -38,14 +38,15 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <nav className="bg-white shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center flex-1">
-                <div className="flex-shrink-0 flex items-center">
-                  <h1 className="text-xl sm:text-2xl font-bold text-indigo-600">
-                    🛢️ Нейросеть предсказания дебита нефти
+            <div className="flex justify-between items-center h-auto sm:h-16 min-h-[64px]">
+              <div className="flex items-center flex-1 min-w-0 pr-2 sm:pr-0">
+                <div className="flex-shrink-0 flex items-center min-w-0 max-w-[calc(100%-60px)] sm:max-w-none">
+                  <h1 className="text-sm sm:text-xl lg:text-2xl font-bold text-indigo-600 leading-tight break-words sm:break-normal">
+                    <span className="sm:inline">🛢️ </span>
+                    <span>Нейросеть предсказания дебита нефти</span>
                   </h1>
                 </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-3">
+                <div className="hidden sm:ml-6 sm:flex sm:space-x-3 flex-shrink-0">
                   <NavLink to="/">Обучение</NavLink>
                   <NavLink to="/predict">Предсказание</NavLink>
                 </div>
