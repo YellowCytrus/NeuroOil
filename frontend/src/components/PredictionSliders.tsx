@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { makePrediction, PredictionRequest, PredictionResponse, extractErrorMessage } from '../utils/api';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { makePrediction, PredictionRequest, PredictionResponse, extractErrorMessage, CorrelationData } from '../utils/api';
+import { loadTrainingData } from '../utils/localStorage';
 
 interface FeatureConfig {
   name: string;
@@ -116,6 +117,36 @@ const featureConfigs: FeatureConfig[] = [
 ];
 
 export default function PredictionSliders() {
+  // Load correlation data from localStorage to sort sliders
+  const correlationData = useMemo(() => {
+    const trainingData = loadTrainingData();
+    if (trainingData?.correlationData) {
+      // Handle both formats: Record<string, CorrelationData> or legacy single CorrelationData
+      const data = trainingData.correlationData;
+      if ('points' in data && 'correlation_coefficient' in data) {
+        // Legacy format - single correlation
+        return { 'Q_liquid': data as CorrelationData };
+      }
+      return data as Record<string, CorrelationData>;
+    }
+    return null;
+  }, []);
+
+  // Sort feature configs by absolute correlation coefficient (descending)
+  const sortedFeatureConfigs = useMemo(() => {
+    if (!correlationData) {
+      return featureConfigs; // Return original order if no correlation data
+    }
+
+    return [...featureConfigs].sort((a, b) => {
+      const corrA = correlationData[a.name]?.correlation_coefficient || 0;
+      const corrB = correlationData[b.name]?.correlation_coefficient || 0;
+      const absCorrA = Math.abs(corrA);
+      const absCorrB = Math.abs(corrB);
+      return absCorrB - absCorrA; // Sort descending (larger to smaller)
+    });
+  }, [correlationData]);
+
   const [values, setValues] = useState<PredictionRequest>(() => {
     const initial: any = {};
     featureConfigs.forEach(config => {
@@ -162,7 +193,7 @@ export default function PredictionSliders() {
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Параметры для предсказания</h2>
           
           <div className="space-y-4 sm:space-y-6">
-            {featureConfigs.map((config) => (
+            {sortedFeatureConfigs.map((config) => (
               <div key={config.name} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-medium text-gray-700">
